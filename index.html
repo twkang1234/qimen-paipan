@@ -226,7 +226,7 @@ function paipan() {
   const datetime = toQimenDatetime(timeStr, longitude);
   let chart, obj, patterns;
   try {
-    chart = Qimen.generateChartByDatetime(datetime);
+    chart = Qimen.generateChartByDatetime(datetime, { 定局法: '符頭' });
     obj = Qimen.chartToObject(chart);
     patterns = Qimen.detectPatterns(obj);
   } catch (e) {
