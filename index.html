@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>奇門遁甲排盤</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0d0f14;
+    color: #e8e3d8;
+    font-family: "Noto Serif TC", "Songti TC", serif;
+    line-height: 1.7;
+    padding: 20px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  h1 {
+    text-align: center;
+    color: #c9a961;
+    font-size: 28px;
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+  }
+  .sub { text-align: center; color: #9a958a; font-size: 13px; margin-bottom: 32px; }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+    padding: 20px;
+    background: #151922;
+    border: 1px solid #2a3142;
+    border-radius: 10px;
+    margin-bottom: 24px;
+  }
+  .field label { display: block; font-size: 12px; color: #9a958a; margin-bottom: 4px; }
+  .field input, .field select {
+    background: #1c2230;
+    border: 1px solid #2a3142;
+    color: #e8e3d8;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+  }
+  .btn {
+    background: linear-gradient(180deg, #c9a961, #8a7440);
+    color: #1a1408;
+    border: none;
+    padding: 9px 24px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 2px;
+  }
+  .btn:hover { filter: brightness(1.1); }
+
+  .info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 32px;
+    padding: 16px 20px;
+    background: #151922;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  .info span { color: #c9a961; font-weight: 600; margin-left: 4px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: #2a3142;
+    border: 1px solid #2a3142;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .palace {
+    background: #151922;
+    padding: 12px;
+    min-height: 140px;
+    position: relative;
+  }
+  .palace .gong {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-size: 11px;
+    color: #5a6378;
+  }
+  .palace .name { font-size: 12px; color: #8a7440; margin-bottom: 6px; }
+  .palace .row { font-size: 13px; margin: 2px 0; }
+  .palace .shen { color: #b98bd8; }
+  .palace .xing { color: #6fb3d8; }
+  .palace .men { color: #d8b26f; }
+  .palace .gan-top { color: #e07b7b; font-size: 15px; font-weight: 700; }
+  .palace .gan-bot { color: #7be0a8; font-size: 13px; }
+
+  .notice {
+    padding: 12px 16px;
+    background: rgba(122,31,31,.15);
+    border-left: 3px solid #7a1f1f;
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    color: #9a958a;
+    margin-bottom: 24px;
+  }
+
+  .section-title {
+    color: #c9a961;
+    font-size: 18px;
+    margin: 32px 0 12px;
+    letter-spacing: 2px;
+  }
+  .keying-list { font-size: 14px; }
+  .keying-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid #1c2230;
+    color: #c8c3b8;
+  }
+  .keying-item .gong-no { color: #8a7440; font-size: 12px; margin-right: 8px; }
+
+  footer {
+    text-align: center;
+    color: #5a6378;
+    font-size: 12px;
+    padding: 40px 0 20px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>奇門遁甲排盤</h1>
+  <div class="sub">按當前時間起局 · 真太陽時校正</div>
+
+  <div class="toolbar">
+    <div class="field">
+      <label>起局時間</label>
+      <input type="datetime-local" id="qTime">
+    </div>
+    <div class="field">
+      <label>真太陽時校正（經度）</label>
+      <input type="number" id="qLongitude" value="121.31" step="0.01" style="width:110px">
+    </div>
+    <button class="btn" id="btnPaipan">起 局</button>
+    <button class="btn" id="btnNow" style="background:transparent;border:1px solid #8a7440;color:#c9a961;">用現在時間</button>
+  </div>
+
+  <div class="info" id="panInfo"></div>
+  <div class="grid" id="palaceGrid"></div>
+
+  <div class="notice">
+    ⚠ 真太陽時校正：以經度 120°E 為基準，每偏離 1° 校正約 4 分鐘。台北經度 121.31° → 校正約 +5.24 分鐘。
+  </div>
+
+  <div class="section-title">十干克應</div>
+  <div class="keying-list" id="keyingList"></div>
+
+  <footer>qimen-dunjia v3.1.0 · 拆補法</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qimen-dunjia@3.1.0/dist/qimen.min.js"></script>
+<script>
+// ============================================================
+// 1. 真太陽時校正
+// ============================================================
+function adjustToTrueSolar(localDate, longitude) {
+  const offsetMinutes = (longitude - 120) * 4;
+  return new Date(localDate.getTime() + offsetMinutes * 60 * 1000);
+}
+
+function formatDatetime(d) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}${pad(d.getHours())}`;
+}
+
+function nowLocalStr() {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// ============================================================
+// 2. 排盤主流程
+// ============================================================
+function paipan() {
+  const timeInput = document.getElementById('qTime').value;
+  const longitude = parseFloat(document.getElementById('qLongitude').value) || 121.31;
+
+  if (!timeInput) { alert('請選擇時間'); return; }
+
+  const localDate = new Date(timeInput);
+  const trueSolarDate = adjustToTrueSolar(localDate, longitude);
+  const datetimeStr = formatDatetime(trueSolarDate);
+
+  // 呼叫 qimen-dunjia 起盤
+  const chart = QimenDunjia.generateChartByDatetime(datetimeStr);
+
+  renderInfo(chart, trueSolarDate);
+  renderGrid(chart);
+  renderKeying(chart);
+}
+
+// ============================================================
+// 3. 渲染盤面資訊
+// ============================================================
+function renderInfo(chart, trueSolarDate) {
+  const info = chart.info || chart;
+  const gz = info.四柱 || {};
+  const shiGan = gz.時 ? gz.時[0] : '';
+  const shiZhi = gz.時 ? gz.時[1] : '';
+  const riGan = gz.日 ? gz.日[0] : '';
+  const riZhi = gz.日 ? gz.日[1] : '';
+
+  document.getElementById('panInfo').innerHTML = `
+    <div>真太陽時<span>${trueSolarDate.toLocaleString('zh-TW')}</span></div>
+    <div>節氣<span>${info.節氣 || '—'}</span></div>
+    <div>局數<span>${info.陰陽遁 || ''} ${info.局數 || ''} 局</span></div>
+    <div>時干支<span>${shiGan}${shiZhi}</span></div>
+    <div>日干支<span>${riGan}${riZhi}</span></div>
+    <div>值符<span>${info.值符 || '—'}</span></div>
+    <div>值使<span>${info.值使 || '—'}</span></div>
+  `;
+}
+
+// ============================================================
+// 4. 渲染九宮格
+// ============================================================
+function renderGrid(chart) {
+  const grid = document.getElementById('palaceGrid');
+  const layout = [4, 9, 2, 3, 5, 7, 8, 1, 6];
+  const palaces = chart.palaces || chart['九宮'] || {};
+
+  grid.innerHTML = layout.map(g => {
+    const p = palaces[g] || {};
+    return `
+      <div class="palace">
+        <div class="gong">${g}</div>
+        <div class="name">${p.name || ''}</div>
+        <div class="row shen">${p.八神 || '—'}</div>
+        <div class="row xing">${p.九星 || '—'}</div>
+        <div class="row men">${p.八門 || '—'}</div>
+        <div class="row gan-top">${p.天盤干 || ''}</div>
+        <div class="row gan-bot">${p.地盤干 || ''}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ============================================================
+// 5. 渲染十干克應
+// ============================================================
+function renderKeying(chart) {
+  const list = document.getElementById('keyingList');
+  const patterns = chart.patterns || chart['格局'] || [];
+
+  if (!patterns.length) {
+    list.innerHTML = '<div style="color:#5a6378;padding:12px;">（暫無克應資料）</div>';
+    return;
+  }
+
+  list.innerHTML = patterns.map(p => {
+    return `<div class="keying-item">
+      <span class="gong-no">${p.宮 || ''}</span>
+      <strong>${p.天干組合 || p.干 || ''}</strong>
+      ${p.名稱 ? `為「${p.名稱}」` : ''}
+      ${p.解釋 ? `<br><span style="color:#9a958a;font-size:13px;">${p.解釋}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// 6. 初始化
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('qTime').value = nowLocalStr();
+
+  document.getElementById('btnPaipan').addEventListener('click', paipan);
+  document.getElementById('btnNow').addEventListener('click', () => {
+    document.getElementById('qTime').value = nowLocalStr();
+    paipan();
+  });
+
+  // 預設先跑一次
+  paipan();
+});
+</script>
+</body>
+</html>
