@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>紫微斗數排盤｜免費線上紫微命盤工具</title>
+  <meta name="description" content="免費線上紫微斗數排盤工具，輸入出生年月日、時間與性別，建立十二宮命盤、主星、輔星、四化與大限基礎資料。">
+  <style>
+    :root{
+      --bg:#030408;
+      --fg:#f5f8fc;
+      --dim:#98a5ba;
+      --sub:#536079;
+      --purple:#ad7cff;
+      --violet:#7b61ff;
+      --cyan:#00f3ff;
+      --gold:#ffbe3b;
+      --magenta:#e024c3;
+      --border:rgba(255,255,255,.10);
+      --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+      --mono:"SF Mono","Fira Code","Courier New",monospace;
+    }
+
+    *{box-sizing:border-box}
+    html{background:var(--bg);scroll-behavior:smooth}
+    body{
+      margin:0;min-height:100vh;overflow-x:hidden;color:var(--fg);font-family:var(--sans);
+      background:
+        radial-gradient(circle 900px at 10% -8%,rgba(173,124,255,.105),transparent 58%),
+        radial-gradient(circle 780px at 94% 4%,rgba(0,243,255,.06),transparent 58%),
+        radial-gradient(circle 650px at 52% 100%,rgba(224,36,195,.045),transparent 62%),
+        #030408;
+    }
+
+    body::before{
+      content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;opacity:.34;
+      background-image:
+        radial-gradient(circle at 15% 22%,rgba(255,255,255,.65) 0 1px,transparent 1.6px),
+        radial-gradient(circle at 71% 16%,rgba(173,124,255,.72) 0 1px,transparent 1.7px),
+        radial-gradient(circle at 84% 67%,rgba(0,243,255,.58) 0 1px,transparent 1.6px),
+        radial-gradient(circle at 32% 78%,rgba(224,36,195,.58) 0 1px,transparent 1.7px);
+      background-size:210px 210px,270px 270px,320px 320px,250px 250px;
+    }
+
+    body::after{
+      content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+      background:
+        linear-gradient(rgba(255,255,255,.014) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.014) 1px,transparent 1px);
+      background-size:64px 64px;
+      mask-image:radial-gradient(circle at center,#000 12%,transparent 82%);
+    }
+
+    .topbar{
+      position:sticky;top:0;z-index:50;display:flex;justify-content:space-between;align-items:center;
+      width:min(1460px,calc(100% - 32px));margin:0 auto;padding:18px 0 12px;backdrop-filter:blur(14px)
+    }
+
+    .home-link,.status-chip{
+      display:inline-flex;align-items:center;gap:9px;padding:9px 14px;border-radius:999px;
+      border:1px solid rgba(173,124,255,.27);background:rgba(10,7,20,.64);
+      color:#cfb8fa;text-decoration:none;font-family:var(--mono);font-size:.70rem;letter-spacing:.09em
+    }
+
+    .home-link{transition:.25s}
+    .home-link:hover{
+      transform:translateY(-1px);border-color:rgba(173,124,255,.62);
+      background:rgba(173,124,255,.08);box-shadow:0 0 28px rgba(173,124,255,.11)
+    }
+
+    .status-chip i{width:7px;height:7px;border-radius:50%;background:var(--purple);box-shadow:0 0 12px var(--purple)}
+
+    .page{width:min(1460px,calc(100% - 40px));margin:0 auto;padding:30px 0 80px}
+
+    .stage{
+      display:grid;grid-template-columns:minmax(0,1fr) auto;gap:28px;align-items:end;margin-bottom:28px
+    }
+
+    .kicker{
+      display:inline-flex;align-items:center;gap:10px;margin-bottom:12px;color:var(--purple);
+      font-family:var(--mono);font-size:.72rem;letter-spacing:.22em
+    }
+    .kicker::before{
+      content:"";width:34px;height:1px;background:var(--purple);box-shadow:0 0 14px rgba(173,124,255,.72)
+    }
+
+    h1{
+      margin:0 0 10px;font-size:clamp(2.15rem,4vw,4rem);line-height:1.08;letter-spacing:-.035em;
+      background:linear-gradient(135deg,#fff 18%,#ddd4f4 50%,#ad7cff 78%,#00f3ff);
+      -webkit-background-clip:text;background-clip:text;color:transparent
+    }
+
+    .stage-desc{max-width:820px;color:#9ca7b8;font-size:.97rem;line-height:1.82}
+
+    .engine-chip{
+      justify-self:end;display:inline-flex;align-items:center;gap:9px;padding:9px 14px;
+      border:1px solid rgba(173,124,255,.27);border-radius:999px;background:rgba(12,8,24,.62);
+      color:#baabd0;font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;white-space:nowrap
+    }
+    .engine-chip i{width:7px;height:7px;border-radius:50%;background:var(--purple);box-shadow:0 0 12px var(--purple)}
+
+    .core{
+      position:relative;overflow:hidden;isolation:isolate;padding:24px;border-radius:30px;
+      border:1px solid rgba(173,124,255,.19);
+      background:
+        radial-gradient(circle 720px at 8% -8%,rgba(173,124,255,.09),transparent 52%),
+        radial-gradient(circle 640px at 92% 8%,rgba(0,243,255,.04),transparent 54%),
+        linear-gradient(145deg,rgba(10,12,24,.96),rgba(5,7,14,.95));
+      box-shadow:0 38px 100px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.035)
+    }
+
+    .core::before{
+      content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.18;
+      background-image:
+        linear-gradient(rgba(255,255,255,.021) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.021) 1px,transparent 1px);
+      background-size:52px 52px
+    }
+
+    .tool-head{
+      display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:6px 4px 20px
+    }
+    .tool-head h2{margin:0 0 5px;font-size:clamp(1.45rem,2.1vw,2rem);letter-spacing:.04em}
+    .tool-sub{color:#7f8ca1;font-size:.78rem;letter-spacing:.06em}
+    .tool-mark{font-family:var(--mono);font-size:.67rem;color:rgba(0,243,255,.76);letter-spacing:.14em;white-space:nowrap}
+
+    .controls{
+      display:grid;grid-template-columns:minmax(260px,1.25fr) minmax(150px,.45fr) auto;
+      gap:12px;align-items:end;padding:18px;margin-bottom:18px;border:1px solid rgba(255,255,255,.085);
+      border-radius:18px;background:rgba(12,15,27,.76);backdrop-filter:blur(18px)
+    }
+
+    .field label{
+      display:block;margin-bottom:6px;color:#7f8ba1;font-family:var(--mono);font-size:.66rem;letter-spacing:.10em
+    }
+
+    .field input,.field select{
+      width:100%;min-height:44px;padding:9px 12px;border:1px solid rgba(166,143,212,.24);
+      border-radius:10px;outline:none;background:#0e1120;color:#edf2f8;font:inherit;font-size:.88rem;
+      color-scheme:dark;transition:border-color .25s,box-shadow .25s,background .25s
+    }
+    .field input:focus,.field select:focus{
+      border-color:rgba(173,124,255,.62);box-shadow:0 0 0 3px rgba(173,124,255,.07);background:#121628
+    }
+
+    button{
+      min-height:44px;padding:9px 22px;border-radius:10px;font:inherit;cursor:pointer;
+      transition:transform .22s,border-color .25s,background .25s,box-shadow .25s
+    }
+
+    .cast-btn{
+      border:1px solid rgba(173,124,255,.70);background:linear-gradient(180deg,#c59bff,#8260d8);
+      color:#110b1b;font-weight:850;letter-spacing:.10em;box-shadow:0 9px 25px rgba(173,124,255,.12)
+    }
+    .cast-btn:hover{transform:translateY(-2px);box-shadow:0 13px 34px rgba(173,124,255,.20)}
+
+    .meta{
+      display:none;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;margin-bottom:18px;
+      overflow:hidden;border:1px solid rgba(255,255,255,.075);border-radius:15px;background:rgba(255,255,255,.06)
+    }
+    .meta.show{display:grid}
+    .meta>div{padding:11px 12px;background:rgba(9,13,22,.92);color:#75839a;font-family:var(--mono);font-size:.62rem;line-height:1.35}
+    .meta span{display:block;margin-top:5px;color:#ccb9ed;font-family:var(--sans);font-size:.82rem;font-weight:750;overflow-wrap:anywhere}
+
+    .empty{
+      min-height:460px;display:grid;place-items:center;text-align:center;padding:40px;border:1px solid rgba(255,255,255,.07);
+      border-radius:22px;background:radial-gradient(circle 440px at 50% 48%,rgba(173,124,255,.05),transparent 68%),rgba(5,8,15,.54);
+      color:#657186
+    }
+    .empty-orbit{
+      width:96px;height:96px;margin:0 auto 18px;border-radius:50%;position:relative;
+      border:1px solid rgba(173,124,255,.28);box-shadow:0 0 46px rgba(173,124,255,.11),inset 0 0 30px rgba(0,243,255,.035)
+    }
+    .empty-orbit::before,.empty-orbit::after{
+      content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+      border-radius:50%;border:1px solid rgba(0,243,255,.18)
+    }
+    .empty-orbit::before{width:68px;height:42px;animation:spin 9s linear infinite}
+    .empty-orbit::after{width:42px;height:68px;border-color:rgba(173,124,255,.27);animation:spin 13s linear infinite reverse}
+    @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+    .empty h3{margin:0 0 8px;color:#c9c1db;font-size:1rem}
+    .empty p{margin:0;max-width:600px;font-size:.78rem;line-height:1.7}
+
+    .results{display:none}
+    .results.show{display:block}
+
+    .chart-wrap{
+      overflow-x:auto;
+      padding-bottom:3px;
+    }
+
+    .ziwei-grid{
+      min-width:980px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      grid-template-rows:repeat(4,minmax(220px,auto));
+      gap:8px;
+      position:relative;
+    }
+
+    .palace{
+      position:relative;overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);border-radius:14px;
+      background:linear-gradient(160deg,rgba(17,19,31,.88),rgba(8,11,19,.90));
+      transition:transform .25s,border-color .25s,box-shadow .25s
+    }
+
+    .palace:hover{
+      transform:translateY(-2px);
+      border-color:rgba(173,124,255,.34);
+      box-shadow:0 14px 34px rgba(0,0,0,.22)
+    }
+
+    .palace.soul-palace{
+      border-color:rgba(255,190,59,.32);
+      box-shadow:inset 0 0 34px rgba(255,190,59,.025)
+    }
+
+    .palace.body-palace::after{
+      content:"身宮";position:absolute;right:8px;top:38px;padding:3px 6px;border-radius:5px;
+      background:rgba(0,243,255,.08);border:1px solid rgba(0,243,255,.22);color:#77e9ee;
+      font-family:var(--mono);font-size:.54rem;letter-spacing:.08em
+    }
+
+    .palace-head{
+      display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;
+      border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.022)
+    }
+    .palace-head strong{font-size:.81rem;color:#dac7f7}
+    .palace-head span{color:#657086;font-family:var(--mono);font-size:.59rem}
+
+    .stars{padding:10px 10px 5px}
+    .major-stars{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+    .major-star{
+      display:inline-flex;align-items:center;gap:4px;padding:4px 7px;border-radius:7px;
+      border:1px solid rgba(173,124,255,.20);background:rgba(173,124,255,.055);
+      color:#e0d3f6;font-size:.72rem;font-weight:800
+    }
+    .major-star .bright{color:#947fab;font-size:.56rem;font-weight:500}
+    .major-star .mutagen{
+      display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 4px;border-radius:4px;
+      background:rgba(255,190,59,.13);color:#e7bd55;font-size:.54rem
+    }
+
+    .minor-stars{
+      color:#8895a9;font-size:.65rem;line-height:1.55;margin-bottom:6px
+    }
+    .minor-stars b{color:#aeb8c7;font-weight:650}
+
+    .palace-foot{
+      margin-top:auto;padding:8px 10px;border-top:1px solid rgba(255,255,255,.05);
+      display:grid;grid-template-columns:1fr 1fr;gap:5px;color:#5d697d;font-size:.58rem;line-height:1.45
+    }
+    .palace-foot b{color:#8c98aa;font-weight:600}
+
+    .center{
+      grid-column:2 / span 2;
+      grid-row:2 / span 2;
+      border:1px solid rgba(173,124,255,.15);border-radius:18px;
+      background:
+        radial-gradient(circle 300px at 50% 38%,rgba(173,124,255,.08),transparent 68%),
+        rgba(8,10,20,.82);
+      padding:24px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+      position:relative;overflow:hidden
+    }
+
+    .center::before,.center::after{
+      content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+      border-radius:50%;border:1px solid rgba(173,124,255,.08);pointer-events:none
+    }
+    .center::before{width:260px;height:260px}
+    .center::after{width:360px;height:360px;border-color:rgba(0,243,255,.04)}
+
+    .center>*{position:relative;z-index:1}
+    .center-kicker{color:var(--purple);font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;margin-bottom:10px}
+    .center h3{margin:0 0 14px;font-size:1.5rem}
+    .center-info{
+      display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:8px;width:min(100%,460px)
+    }
+    .center-info div{
+      padding:9px 10px;border:1px solid rgba(255,255,255,.055);border-radius:9px;background:rgba(255,255,255,.022);
+      color:#667287;font-size:.61rem
+    }
+    .center-info span{display:block;margin-top:3px;color:#bdc6d4;font-size:.74rem;font-weight:700}
+    .center-note{margin:14px 0 0;color:#657186;font-size:.66rem;line-height:1.6;max-width:500px}
+
+    .notice{
+      margin-top:16px;padding:12px 14px;border:1px solid rgba(173,124,255,.10);border-left:2px solid rgba(173,124,255,.55);
+      border-radius:10px;background:rgba(173,124,255,.028);color:#758196;font-size:.70rem;line-height:1.75
+    }
+
+    footer{padding:20px 0 0;text-align:center;color:#455065;font-family:var(--mono);font-size:.63rem;letter-spacing:.08em}
+
+    @media(max-width:1150px){
+      .meta{grid-template-columns:repeat(3,minmax(0,1fr))}
+    }
+    @media(max-width:850px){
+      .page{width:min(100% - 24px,1460px);padding-top:18px}
+      .stage{grid-template-columns:1fr;align-items:start}
+      .engine-chip{justify-self:start}
+      .core{padding:14px;border-radius:22px}
+      .tool-head{align-items:flex-start;flex-direction:column}
+      .tool-mark{white-space:normal}
+      .controls{grid-template-columns:1fr}
+      .meta{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:560px){
+      .status-chip{display:none}
+    }
+    @media(prefers-reduced-motion:reduce){
+      *,*::before,*::after{animation:none!important;transition-duration:.01ms!important}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a class="home-link" href="index.html">← 返回光門首頁</a>
+    <div class="status-chip"><i></i><span>ZIWEI DIMENSION // CORE ONLINE</span></div>
+  </div>
+
+  <main class="page">
+    <header class="stage">
+      <div>
+        <div class="kicker">ZIWEI CORE // TWELVE PALACES FIELD</div>
+        <h1>紫微斗數排盤</h1>
+        <p class="stage-desc">輸入出生年月日、出生時間與性別，建立十二宮紫微命盤。這一版以免費體驗為主，先呈現命宮、身宮、主星、輔星、四化與大限等基礎資料，讓使用者快速認識紫微斗數的盤面結構。</p>
+      </div>
+      <div class="engine-chip"><i></i><span>TWELVE PALACES READY</span></div>
+    </header>
+
+    <section class="core" aria-label="紫微斗數排盤工具">
+      <div class="tool-head">
+        <div>
+          <h2>紫微斗數排盤核心</h2>
+          <div class="tool-sub">十二宮 · 主星 · 輔星 · 四化 · 大限 · 命主身主</div>
+        </div>
+        <div class="tool-mark">BIRTH DATE → TIME BRANCH → TWELVE PALACES → STARS</div>
+      </div>
+
+      <div class="controls">
+        <div class="field">
+          <label for="birthTime">出生日期與時間</label>
+          <input id="birthTime" type="datetime-local">
+        </div>
+        <div class="field">
+          <label for="gender">性別</label>
+          <select id="gender">
+            <option value="男">男</option>
+            <option value="女">女</option>
+          </select>
+        </div>
+        <button class="cast-btn" id="castBtn" type="button">排 紫 微</button>
+      </div>
+
+      <div class="meta" id="meta"></div>
+
+      <div class="empty" id="emptyState">
+        <div>
+          <div class="empty-orbit"></div>
+          <h3>紫微命盤尚未建立</h3>
+          <p>輸入出生年月日、時間與性別後按下「排紫微」。本頁先提供基礎免費體驗，重點放在十二宮、主星與基本盤面資料。</p>
+        </div>
+      </div>
+
+      <div class="results" id="results">
+        <div class="chart-wrap">
+          <div class="ziwei-grid" id="ziweiGrid"></div>
+        </div>
+      </div>
+
+      <div class="notice">
+        ✦ 紫微斗數流派眾多，不同流派對四化、亮度、換日與細部安星設定可能存在差異。本工具目前作為免費入門體驗，正式深入解盤時仍應確認使用的流派與排盤規則。
+      </div>
+
+      <footer>ziwei-core.js · iztro 2.6.1 · local chart rendering</footer>
+    </section>
+  </main>
+
+  <!-- 紫微排盤引擎：iztro 2.6.1，MIT License -->
+  <script src="https://cdn.jsdelivr.net/npm/iztro@2.6.1/dist/iztro.min.js"></script>
+  <script src="ziwei-core.js"></script>
+
+  <script>
+    (() => {
+      const birthTime = document.getElementById('birthTime');
+      const gender = document.getElementById('gender');
+      const castBtn = document.getElementById('castBtn');
+      const emptyState = document.getElementById('emptyState');
+      const results = document.getElementById('results');
+      const meta = document.getElementById('meta');
+      const grid = document.getElementById('ziweiGrid');
+
+      function pad(n){ return String(n).padStart(2,'0'); }
+
+      function nowValue(){
+        const d = new Date();
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      }
+
+      function esc(s=''){
+        return String(s).replace(/[&<>"']/g, ch => ({
+          '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+        })[ch]);
+      }
+
+      function starsText(stars){
+        if (!stars || !stars.length) return '—';
+        return stars.map(s => s.name).join('、');
+      }
+
+      function renderMeta(data){
+        const items = [
+          ['公曆', data.solarDate],
+          ['農曆', data.lunarDate],
+          ['四柱', data.chineseDate],
+          ['時辰', `${data.time} ${data.timeRange}`],
+          ['生肖／星座', `${data.zodiac}／${data.sign}`],
+          ['五行局', data.fiveElementsClass]
+        ];
+        meta.innerHTML = items.map(([k,v]) => `<div>${esc(k)}<span>${esc(v || '—')}</span></div>`).join('');
+        meta.classList.add('show');
+      }
+
+      function renderMajorStars(stars){
+        if (!stars || !stars.length) return '<span class="major-star">空宮</span>';
+        return stars.map(s => `
+          <span class="major-star">
+            ${esc(s.name)}
+            ${s.brightness ? `<span class="bright">${esc(s.brightness)}</span>` : ''}
+            ${s.mutagen ? `<span class="mutagen">${esc(s.mutagen)}</span>` : ''}
+          </span>
+        `).join('');
+      }
+
+      function palaceHTML(p){
+        const decadal = p.decadal && p.decadal.range && p.decadal.range.length
+          ? `${p.decadal.range[0]}～${p.decadal.range[1]}歲`
+          : '—';
+
+        const minor = [...(p.minorStars || []), ...(p.adjectiveStars || [])];
+        const classes = [
+          'palace',
+          p.earthlyBranch === currentData.soulPalaceBranch ? 'soul-palace' : '',
+          p.isBodyPalace ? 'body-palace' : ''
+        ].filter(Boolean).join(' ');
+
+        return `
+          <section class="${classes}">
+            <div class="palace-head">
+              <strong>${esc(p.name)}宮</strong>
+              <span>${esc(p.heavenlyStem)}${esc(p.earthlyBranch)}</span>
+            </div>
+            <div class="stars">
+              <div class="major-stars">${renderMajorStars(p.majorStars)}</div>
+              <div class="minor-stars"><b>輔雜曜：</b>${esc(starsText(minor))}</div>
+            </div>
+            <div class="palace-foot">
+              <div>大限 <b>${esc(decadal)}</b></div>
+              <div>長生 <b>${esc(p.changsheng12 || '—')}</b></div>
+              <div>博士 <b>${esc(p.boshi12 || '—')}</b></div>
+              <div>小限 <b>${esc((p.ages || []).slice(0,4).join('、') || '—')}</b></div>
+            </div>
+          </section>
+        `;
+      }
+
+      function centerHTML(data){
+        return `
+          <section class="center">
+            <div class="center-kicker">PURPLE STAR ASTROLABE</div>
+            <h3>紫微斗數命盤</h3>
+            <div class="center-info">
+              <div>命主<span>${esc(data.soul || '—')}</span></div>
+              <div>身主<span>${esc(data.body || '—')}</span></div>
+              <div>命宮<span>${esc(data.soulPalaceBranch || '—')}宮</span></div>
+              <div>身宮<span>${esc(data.bodyPalaceBranch || '—')}宮</span></div>
+              <div>五行局<span>${esc(data.fiveElementsClass || '—')}</span></div>
+              <div>性別<span>${esc(data.gender || '—')}</span></div>
+            </div>
+            <p class="center-note">免費體驗版先顯示十二宮與主要星曜資料，方便理解紫微命盤的基本結構。</p>
+          </section>
+        `;
+      }
+
+      // iztro 宮位索引從寅宮開始，傳統 4×4 方盤位置：
+      // 巳3 午4 未5 申6
+      // 辰2 [中宮] [中宮] 酉7
+      // 卯1 [中宮] [中宮] 戌8
+      // 寅0 丑11 子10 亥9
+      const layout = [
+        {idx:3,col:1,row:1},{idx:4,col:2,row:1},{idx:5,col:3,row:1},{idx:6,col:4,row:1},
+        {idx:2,col:1,row:2},{idx:7,col:4,row:2},
+        {idx:1,col:1,row:3},{idx:8,col:4,row:3},
+        {idx:0,col:1,row:4},{idx:11,col:2,row:4},{idx:10,col:3,row:4},{idx:9,col:4,row:4}
+      ];
+
+      let currentData = null;
+
+      function renderChart(data){
+        currentData = data;
+        const palaceByIndex = Object.fromEntries(data.palaces.map(p => [p.index,p]));
+        grid.innerHTML = centerHTML(data);
+
+        layout.forEach(pos => {
+          const p = palaceByIndex[pos.idx];
+          if (!p) return;
+          const temp = document.createElement('div');
+          temp.innerHTML = palaceHTML(p);
+          const el = temp.firstElementChild;
+          el.style.gridColumn = String(pos.col);
+          el.style.gridRow = String(pos.row);
+          grid.appendChild(el);
+        });
+      }
+
+      function cast(){
+        try{
+          const data = ZiweiCore.cast({
+            datetime: birthTime.value,
+            gender: gender.value
+          });
+
+          renderMeta(data);
+          renderChart(data);
+          emptyState.style.display = 'none';
+          results.classList.add('show');
+        }catch(err){
+          alert(err && err.message ? err.message : String(err));
+        }
+      }
+
+      birthTime.value = nowValue();
+      castBtn.addEventListener('click', cast);
+    })();
+  </script>
+</body>
+</html>
